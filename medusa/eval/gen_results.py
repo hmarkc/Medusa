@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import copy
-import networkx as nx
+# import networkx as nx
 import torch
 import argparse
 
@@ -8,8 +8,8 @@ def load_accuracy_table(path):
     test_accuracy = torch.load(path)
     accuracy_table = []
     for i in range(len(test_accuracy)):
-        accuracy_table.append(test_accuracy[i].sum(0)/16100)
-    return torch.stack(accuracy_table)
+        accuracy_table.append(test_accuracy[i].sum(0)/test_accuracy[i].size(0))
+    return torch.stack(accuracy_table)[:3, :10]
 
 def get_node_expectation(accuracies, node):
     expectation = copy.deepcopy(accuracies[0, node[0]])
@@ -76,24 +76,25 @@ def plot_and_save_graph(accept_nodes, output_path):
 def main():
     parser = argparse.ArgumentParser(description="Generate Results.")
     parser.add_argument('--accuracy-path', type=str, required=True, help="Path to load accuracy tensor.")
-    parser.add_argument('--output-path', type=str, required=True, help="Path to save the generated graph.")
-    parser.add_argument('--max-depth', type=int, default=5, help="Maximum depth of the graph.")
-    parser.add_argument('--num-iterations', type=int, default=62, help="Number of exploration iterations.")
-    parser.add_argument('--max-child', nargs='+', type=int, default=[10, 10, 10, 10, 10], help="Maximum number of children per depth.")
+    # parser.add_argument('--output-path', type=str, required=True, help="Path to save the generated graph.")
+    # parser.add_argument('--max-depth', type=int, default=5, help="Maximum depth of the graph.")
+    # parser.add_argument('--num-iterations', type=int, default=62, help="Number of exploration iterations.")
+    # parser.add_argument('--max-child', nargs='+', type=int, default=[10, 10, 10, 10, 10], help="Maximum number of children per depth.")
 
     args = parser.parse_args()
 
     accuracies = load_accuracy_table(args.accuracy_path)
-    accept_nodes = explore_graph(accuracies, args.max_depth, args.max_child, args.num_iterations)
+    print(accuracies, accuracies.shape)
+    # accept_nodes = explore_graph(accuracies, args.max_depth, args.max_child, args.num_iterations)
     
-    print("Accepted Nodes:", accept_nodes)
+    # print("Accepted Nodes:", accept_nodes)
     
-    try:
-        plot_and_save_graph(accept_nodes, args.output_path)
-        print(f"Graph saved to {args.output_path}.")
-    except Exception as e:
-        print(f"Failed to save the graph due to the following error: {e}")
-        print("Ensure that Graphviz and pygraphviz are installed and set up correctly.")
+    # try:
+    #     plot_and_save_graph(accept_nodes, args.output_path)
+    #     print(f"Graph saved to {args.output_path}.")
+    # except Exception as e:
+    #     print(f"Failed to save the graph due to the following error: {e}")
+    #     print("Ensure that Graphviz and pygraphviz are installed and set up correctly.")
 
 if __name__ == "__main__":
     main()

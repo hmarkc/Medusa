@@ -32,6 +32,7 @@ def main(args):
         low_cpu_mem_usage=True,
         device_map="auto"
     )
+    model.eval()
     tokenizer = model.get_tokenizer()
 
 
