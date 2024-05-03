@@ -30,39 +30,40 @@ def medusa_forward(input_ids, model, tokenizer, medusa_choices, temperature, pos
     input_ids = input_ids.clone()
 
     # Cache medusa buffers (the fixed patterns for tree attention)
-    if hasattr(model, "medusa_choices") and model.medusa_choices == medusa_choices:
-        # Load the cached medusa buffer
-        medusa_buffers = model.medusa_buffers
-    else:
-        # Initialize the medusa buffer
-        medusa_buffers = generate_medusa_buffers(
-            medusa_choices, device=model.base_model.device
-        )
-    model.medusa_buffers = medusa_buffers
-    model.medusa_choices = medusa_choices
+    # if hasattr(model, "medusa_choices") and model.medusa_choices == medusa_choices:
+    #     # Load the cached medusa buffer
+    #     medusa_buffers = model.medusa_buffers
+    # else:
+    #     # Initialize the medusa buffer
+    #     medusa_buffers = generate_medusa_buffers(
+    #         medusa_choices, device=model.base_model.device
+    #     )
+    # model.medusa_buffers = medusa_buffers
+    # model.medusa_choices = medusa_choices
 
     # Initialize the past key and value states
-    if hasattr(model, "past_key_values"):
-        past_key_values = model.past_key_values
-        past_key_values_data = model.past_key_values_data
-        current_length_data = model.current_length_data
-        # Reset the past key and value states
-        current_length_data.zero_()
-    else:
-        (
-            past_key_values,
-            past_key_values_data,
-            current_length_data,
-        ) = initialize_past_key_values(model.base_model)
-        model.past_key_values = past_key_values
-        model.past_key_values_data = past_key_values_data
-        model.current_length_data = current_length_data
+    # if hasattr(model, "past_key_values"):
+    #     past_key_values = model.past_key_values
+    #     past_key_values_data = model.past_key_values_data
+    #     current_length_data = model.current_length_data
+    #     # Reset the past key and value states
+    #     current_length_data.zero_()
+    # else:
+    #     (
+    #         past_key_values,
+    #         past_key_values_data,
+    #         current_length_data,
+    #     ) = initialize_past_key_values(model.base_model)
+    #     model.past_key_values = past_key_values
+    #     model.past_key_values_data = past_key_values_data
+    #     model.current_length_data = current_length_data
 
     input_len = input_ids.shape[1]
-    reset_medusa_mode(model)
+    # reset_medusa_mode(model)
     # medusa_logits, logits = initialize_medusa(
     #         input_ids, model, medusa_buffers["medusa_attn_mask"], past_key_values
     # )
+    past_key_values = None
     outputs = model.base_model(input_ids, past_key_values = past_key_values, use_cache=True)
     new_token = 0
     
@@ -98,7 +99,7 @@ def medusa_forward(input_ids, model, tokenizer, medusa_choices, temperature, pos
         #         current_length_data,
         #     )
         input_id = outputs.logits[:, -1:].argmax(dim=-1)
-        outputs = model.base_model(input_id, use_cache=True, past_key_values = past_key_values)
+        outputs = model.base_model(input_id, use_cache=True, past_key_values = outputs.past_key_values)
         input_ids = torch.cat([input_ids, input_id], dim=-1)
 
         if tokenizer.eos_token_id in input_ids[0, input_len:].tolist():
